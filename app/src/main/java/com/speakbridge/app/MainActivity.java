@@ -20,7 +20,6 @@ import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -36,9 +35,7 @@ public class MainActivity extends Activity {
     private final int MUTED = Color.rgb(183, 202, 211);
     private final int YELLOW = Color.rgb(255, 210, 90);
 
-    private LinearLayout root;
-    private LinearLayout content;
-
+    private LinearLayout root, content;
     private String currentScreen = "Home";
     private String selectedLanguage = "Spanish";
     private String recognizedText = "";
@@ -49,7 +46,6 @@ public class MainActivity extends Activity {
     private int selectedLesson = 0;
 
     private boolean quizAnswered = false;
-
     private TextToSpeech speech;
     private SharedPreferences preferences;
 
@@ -57,55 +53,141 @@ public class MainActivity extends Activity {
 
     private Set<String> completedLessonKeys = new HashSet<>();
 
-    // Each lesson contains an English phrase and its translation.
+    private final String[] languageNames = {
+        "English",
+        "Spanish",
+        "French",
+        "German",
+        "Portuguese",
+        "Sesotho",
+        "isiZulu",
+        "Swahili",
+        "Arabic",
+        "Japanese",
+        "Korean",
+        "Chinese (Mandarin)",
+        "Hindi",
+        "Setswana",
+        "isiXhosa",
+        "Afrikaans",
+        "Sepedi",
+        "Kinyarwanda",
+        "Kirundi",
+        "Luganda",
+        "Amharic",
+        "Somali",
+        "Yoruba",
+        "Igbo",
+        "Hausa",
+        "Shona",
+        "Chichewa",
+        "Malagasy",
+        "Dutch",
+        "Italian",
+        "Russian",
+        "Turkish",
+        "Greek",
+        "Bengali",
+        "Urdu",
+        "Persian",
+        "Thai",
+        "Vietnamese",
+        "Indonesian",
+        "Malay",
+        "Filipino",
+        "Hebrew",
+        "Nepali",
+        "Polish",
+        "Ukrainian",
+        "Swedish",
+        "Norwegian",
+        "Danish",
+        "Finnish",
+        "Romanian"
+    };
+
+    // Each row matches the languageNames order.
+    // Each row contains: Hello, Thank you, Goodbye.
     private final String[][] courseData = {
-            {"Hello", "Thank you", "Goodbye"},
-            {"Hola", "Gracias", "Adiós"},
-            {"Bonjour", "Merci", "Au revoir"},
-            {"Hallo", "Danke", "Auf Wiedersehen"},
-            {"Olá", "Obrigado", "Adeus"},
-            {"Lumela", "Kea leboha", "Sala hantle"},
-            {"Sawubona", "Ngiyabonga", "Hamba kahle"},
-            {"Habari", "Asante", "Kwaheri"},
-            {"مرحبا", "شكرا", "مع السلامة"},
-            {"こんにちは", "ありがとう", "さようなら"},
-            {"안녕하세요", "감사합니다", "안녕히 가세요"},
-            {"你好", "谢谢", "再见"},
-            {"नमस्ते", "धन्यवाद", "अलविदा"}
+        {"Hello", "Thank you", "Goodbye"},
+        {"Hola", "Gracias", "Adiós"},
+        {"Bonjour", "Merci", "Au revoir"},
+        {"Hallo", "Danke", "Auf Wiedersehen"},
+        {"Olá", "Obrigado", "Adeus"},
+        {"Lumela", "Kea leboha", "Sala hantle"},
+        {"Sawubona", "Ngiyabonga", "Hamba kahle"},
+        {"Habari", "Asante", "Kwaheri"},
+        {"مرحبا", "شكرا", "مع السلامة"},
+        {"こんにちは", "ありがとう", "さようなら"},
+        {"안녕하세요", "감사합니다", "안녕히 가세요"},
+        {"你好", "谢谢", "再见"},
+        {"नमस्ते", "धन्यवाद", "अलविदा"},
+        {"Dumela", "Ke a leboga", "Tsamaya sentle"},
+        {"Molo", "Enkosi", "Hamba kakuhle"},
+        {"Hallo", "Dankie", "Totsiens"},
+        {"Thobela", "Ke a leboga", "Sepela gabotse"},
+        {"Muraho", "Murakoze", "Murabeho"},
+        {"Bwakeye", "Urakoze", "N’agasaga"},
+        {"Oli otya", "Webale", "Weeraba"},
+        {"Selam", "Ameseginalehu", "Dehna hunu"},
+        {"Salaan", "Mahadsanid", "Nabad gelyo"},
+        {"Bawo", "E se", "O dabọ"},
+        {"Ndewo", "Imela", "Ka ọ dị"},
+        {"Sannu", "Na gode", "Sai an jima"},
+        {"Mhoro", "Ndatenda", "Sara mushe"},
+        {"Moni", "Zikomo", "Tsalani bwino"},
+        {"Manao ahoana", "Misaotra", "Veloma"},
+        {"Hallo", "Dank je", "Tot ziens"},
+        {"Ciao", "Grazie", "Arrivederci"},
+        {"Здравствуйте", "Спасибо", "До свидания"},
+        {"Merhaba", "Teşekkür ederim", "Hoşça kal"},
+        {"Γεια σας", "Ευχαριστώ", "Αντίο"},
+        {"নমস্কার", "ধন্যবাদ", "বিদায়"},
+        {"السلام علیکم", "شکریہ", "خدا حافظ"},
+        {"سلام", "ممنون", "خداحافظ"},
+        {"สวัสดี", "ขอบคุณ", "ลาก่อน"},
+        {"Xin chào", "Cảm ơn", "Tạm biệt"},
+        {"Halo", "Terima kasih", "Selamat tinggal"},
+        {"Hai", "Terima kasih", "Selamat tinggal"},
+        {"Kamusta", "Salamat", "Paalam"},
+        {"שלום", "תודה", "להתראות"},
+        {"नमस्ते", "धन्यवाद", "अलविदा"},
+        {"Cześć", "Dziękuję", "Do widzenia"},
+        {"Привіт", "Дякую", "До побачення"},
+        {"Hej", "Tack", "Hej då"},
+        {"Hei", "Takk", "Ha det"},
+        {"Hej", "Tak", "Farvel"},
+        {"Hei", "Kiitos", "Näkemiin"},
+        {"Bună", "Mulțumesc", "La revedere"}
+    };
+
+    private final String[] languageTags = {
+        "en", "es", "fr", "de", "pt",
+        "st", "zu", "sw", "ar", "ja",
+        "ko", "zh-CN", "hi", "tn", "xh",
+        "af", "nso", "rw", "rn", "lg",
+        "am", "so", "yo", "ig", "ha",
+        "sn", "ny", "mg", "nl", "it",
+        "ru", "tr", "el", "bn", "ur",
+        "fa", "th", "vi", "id", "ms",
+        "fil", "he", "ne", "pl", "uk",
+        "sv", "no", "da", "fi", "ro"
     };
 
     private final String[] lessonTitles = {
-            "Greetings",
-            "Showing gratitude",
-            "Saying goodbye"
+        "Greetings",
+        "Showing gratitude",
+        "Saying goodbye"
     };
 
     private final String[] lessonDescriptions = {
-            "Learn how to greet someone.",
-            "Learn how to say thank you.",
-            "Learn how to say goodbye."
+        "Learn how to greet someone.",
+        "Learn how to say thank you.",
+        "Learn how to say goodbye."
     };
 
     private final String[] englishPhrases = {
-            "Hello",
-            "Thank you",
-            "Goodbye"
-    };
-
-    private final String[] languageNames = {
-            "English",
-            "Spanish",
-            "French",
-            "German",
-            "Portuguese",
-            "Sesotho",
-            "isiZulu",
-            "Swahili",
-            "Arabic",
-            "Japanese",
-            "Korean",
-            "Chinese (Mandarin)",
-            "Hindi"
+        "Hello", "Thank you", "Goodbye"
     };
 
     @Override
@@ -113,8 +195,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         preferences = getSharedPreferences(
-                "SpeakBridgeProgress",
-                MODE_PRIVATE
+            "SpeakBridgeProgress", MODE_PRIVATE
         );
 
         loadProgress();
@@ -122,7 +203,7 @@ public class MainActivity extends Activity {
 
         speech = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
-                speech.setLanguage(Locale.getDefault());
+                setSpeechLanguage();
             }
         });
 
@@ -130,76 +211,72 @@ public class MainActivity extends Activity {
     }
 
     // --------------------------------
-    // PERMANENT PROGRESS
+    // SAVED PROGRESS
     // --------------------------------
 
     private void loadProgress() {
-
         xp = preferences.getInt("xp", 0);
         streak = preferences.getInt("streak", 1);
-
         completedLessons = preferences.getInt(
-                "completed_lessons", 0
+            "completed_lessons", 0
         );
 
         selectedLanguage = preferences.getString(
-                "selected_language", "Spanish"
+            "selected_language", "Spanish"
         );
 
         recognizedText = preferences.getString(
-                "recognized_text", ""
+            "recognized_text", ""
         );
 
-        Set<String> saved = preferences.getStringSet(
+        completedLessonKeys = new HashSet<>(
+            preferences.getStringSet(
                 "completed_lesson_keys", new HashSet<>()
+            )
         );
 
-        completedLessonKeys = new HashSet<>(saved);
+        if (getLanguageIndex() < 0) {
+            selectedLanguage = "Spanish";
+        }
     }
 
     private void saveProgress() {
-
         preferences.edit()
-                .putInt("xp", xp)
-                .putInt("streak", streak)
-                .putInt("completed_lessons", completedLessons)
-                .putString("selected_language", selectedLanguage)
-                .putString("recognized_text", recognizedText)
-                .putStringSet(
-                        "completed_lesson_keys",
-                        new HashSet<>(completedLessonKeys)
-                )
-                .apply();
+            .putInt("xp", xp)
+            .putInt("streak", streak)
+            .putInt("completed_lessons", completedLessons)
+            .putString("selected_language", selectedLanguage)
+            .putString("recognized_text", recognizedText)
+            .putStringSet(
+                "completed_lesson_keys",
+                new HashSet<>(completedLessonKeys)
+            )
+            .apply();
     }
 
     private String getTodayDate() {
-
         return new SimpleDateFormat(
-                "yyyyMMdd", Locale.US
+            "yyyyMMdd", Locale.US
         ).format(new Date());
     }
 
     private String getYesterdayDate() {
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_YEAR, -1);
+        Calendar c = Calendar.getInstance();
+        c.add(Calendar.DAY_OF_YEAR, -1);
 
         return new SimpleDateFormat(
-                "yyyyMMdd", Locale.US
-        ).format(calendar.getTime());
+            "yyyyMMdd", Locale.US
+        ).format(c.getTime());
     }
 
     private void updateLearningStreak() {
-
         String today = getTodayDate();
 
         String lastDate = preferences.getString(
-                "last_active_date", ""
+            "last_active_date", ""
         );
 
-        if (lastDate.equals(today)) {
-            return;
-        }
+        if (lastDate.equals(today)) return;
 
         if (lastDate.equals(getYesterdayDate())) {
             streak++;
@@ -208,14 +285,55 @@ public class MainActivity extends Activity {
         }
 
         preferences.edit()
-                .putInt("streak", streak)
-                .putString("last_active_date", today)
-                .apply();
+            .putInt("streak", streak)
+            .putString("last_active_date", today)
+            .apply();
     }
 
     private void addXP(int points) {
         xp += points;
         saveProgress();
+    }
+
+    // --------------------------------
+    // LANGUAGE SYSTEM
+    // --------------------------------
+
+    private int getLanguageIndex() {
+        for (int i = 0; i < languageNames.length; i++) {
+            if (languageNames[i].equals(selectedLanguage)) {
+                return i;
+            }
+        }
+        return 1;
+    }
+
+    private String getTranslation(int lessonIndex) {
+        return courseData[getLanguageIndex()][lessonIndex];
+    }
+
+    private String getLanguageTag() {
+        return languageTags[getLanguageIndex()];
+    }
+
+    private void setSpeechLanguage() {
+        if (speech != null) {
+            Locale locale = Locale.forLanguageTag(
+                getLanguageTag()
+            );
+
+            int result = speech.setLanguage(locale);
+
+            if (result == TextToSpeech.LANG_MISSING_DATA
+                    || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Toast.makeText(
+                    this,
+                    "Voice for " + selectedLanguage
+                        + " may not be installed.",
+                    Toast.LENGTH_SHORT
+                ).show();
+            }
+        }
     }
 
     private String lessonKey(int index) {
@@ -227,27 +345,23 @@ public class MainActivity extends Activity {
     }
 
     private void completeLesson(int index) {
-
         String key = lessonKey(index);
 
         if (!completedLessonKeys.contains(key)) {
-
             completedLessonKeys.add(key);
             completedLessons++;
             addXP(10);
 
             Toast.makeText(
-                    this,
-                    "Lesson completed! +10 XP",
-                    Toast.LENGTH_SHORT
+                this,
+                "Lesson completed! +10 XP",
+                Toast.LENGTH_SHORT
             ).show();
-
         } else {
-
             Toast.makeText(
-                    this,
-                    "You have already completed this lesson.",
-                    Toast.LENGTH_SHORT
+                this,
+                "You have already completed this lesson.",
+                Toast.LENGTH_SHORT
             ).show();
         }
 
@@ -255,35 +369,14 @@ public class MainActivity extends Activity {
         showScreen("Learn");
     }
 
-    // --------------------------------
-    // LANGUAGE COURSE DATA
-    // --------------------------------
+    private int getCompletedInCurrentCourse() {
+        int count = 0;
 
-    private int getLanguageIndex() {
-
-        for (int i = 0; i < languageNames.length; i++) {
-            if (languageNames[i].equals(selectedLanguage)) {
-                return i;
-            }
+        for (int i = 0; i < 3; i++) {
+            if (isLessonComplete(i)) count++;
         }
 
-        return 1;
-    }
-
-    private String getTranslation(int lessonIndex) {
-
-        int languageIndex = getLanguageIndex();
-
-        return courseData[languageIndex][lessonIndex];
-    }
-
-    private String getLanguageNote() {
-
-        if (selectedLanguage.equals("English")) {
-            return "You are learning useful English phrases.";
-        }
-
-        return "Starter vocabulary for " + selectedLanguage + ".";
+        return count;
     }
 
     // --------------------------------
@@ -291,7 +384,6 @@ public class MainActivity extends Activity {
     // --------------------------------
 
     private void showScreen(String screen) {
-
         currentScreen = screen;
 
         root = new LinearLayout(this);
@@ -299,24 +391,22 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(BG);
 
         TextView header = makeText(
-                "SpeakBridge", 25, TEAL, true
+            "SpeakBridge", 25, TEAL, true
         );
 
         header.setPadding(
-                dp(20), dp(18), dp(20), dp(3)
+            dp(20), dp(18), dp(20), dp(3)
         );
-
         root.addView(header);
 
         TextView tagline = makeText(
-                "ONE WORLD. EVERY LANGUAGE.",
-                10, MUTED, true
+            "ONE WORLD. EVERY LANGUAGE.",
+            10, MUTED, true
         );
 
         tagline.setPadding(
-                dp(20), 0, dp(20), dp(15)
+            dp(20), 0, dp(20), dp(15)
         );
-
         root.addView(tagline);
 
         ScrollView scroll = new ScrollView(this);
@@ -324,17 +414,15 @@ public class MainActivity extends Activity {
 
         content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
-
         content.setPadding(
-                dp(18), dp(8), dp(18), dp(20)
+            dp(18), dp(8), dp(18), dp(20)
         );
 
         scroll.addView(content);
 
         root.addView(scroll,
-                new LinearLayout.LayoutParams(
-                        -1, 0, 1
-                ));
+            new LinearLayout.LayoutParams(-1, 0, 1)
+        );
 
         showContent(screen);
         addNavigation();
@@ -343,7 +431,6 @@ public class MainActivity extends Activity {
     }
 
     private void showContent(String screen) {
-
         if (screen.equals("Home")) {
             showHome();
         } else if (screen.equals("Learn")) {
@@ -360,6 +447,8 @@ public class MainActivity extends Activity {
             showQuiz();
         } else if (screen.equals("Translate")) {
             showTranslate();
+        } else if (screen.equals("Languages")) {
+            showLanguages();
         }
     }
 
@@ -368,160 +457,127 @@ public class MainActivity extends Activity {
     // --------------------------------
 
     private void showHome() {
+        addText("HELLO, LANGUAGE EXPLORER",
+            12, TEAL, true);
 
-        addText(
-                "HELLO, LANGUAGE EXPLORER",
-                12, TEAL, true
-        );
+        addText("Your next conversation starts here.",
+            23, WHITE, true);
 
-        addText(
-                "Your next conversation starts here.",
-                23, WHITE, true
-        );
-
-        addText(
-                "Learn a language. Connect with the world.",
-                14, MUTED, false
-        );
+        addText("Learn a language. Connect with the world.",
+            14, MUTED, false);
 
         addSpace(18);
 
         LinearLayout course = card();
 
-        addTextTo(course,
-                "YOUR CURRENT LANGUAGE", 11, TEAL, true);
+        addTextTo(course, "YOUR CURRENT LANGUAGE",
+            11, TEAL, true);
 
-        addTextTo(course,
-                selectedLanguage, 23, WHITE, true);
+        addTextTo(course, selectedLanguage,
+            23, WHITE, true);
 
-        addTextTo(course,
-                "Beginner • Starter course", 13, MUTED, false);
+        addTextTo(course, "Beginner • Starter course",
+            13, MUTED, false);
 
         Button continueButton = makeButton(
-                "CONTINUE LEARNING"
+            "CONTINUE LEARNING"
         );
-
         course.addView(continueButton);
 
-        continueButton.setOnClickListener(v ->
-                showScreen("Learn"));
+        continueButton.setOnClickListener(
+            v -> showScreen("Learn")
+        );
 
         content.addView(course);
 
         addSpace(15);
-
         addText("YOUR LEARNING JOURNEY", 15, WHITE, true);
 
         LinearLayout stats = card();
 
-        addTextTo(stats,
-                xp + " XP earned", 21, TEAL, true);
+        addTextTo(stats, xp + " XP earned",
+            21, TEAL, true);
+
+        addTextTo(stats, "🔥 " + streak + " day streak",
+            14, MUTED, false);
 
         addTextTo(stats,
-                "🔥 " + streak + " day streak",
-                14, MUTED, false);
-
-        addTextTo(stats,
-                completedLessons + " lessons completed",
-                14, MUTED, false);
+            completedLessons + " lessons completed",
+            14, MUTED, false);
 
         content.addView(stats);
 
-        addSpace(12);
+        addFeature("📚", "Learn languages",
+            "Structured lessons and vocabulary", "Learn");
 
-        addFeature(
-                "📚", "Learn languages",
-                "Structured lessons and vocabulary",
-                "Learn"
-        );
+        addFeature("🎤", "Speaking practice",
+            "Practise saying words aloud", "Speak");
 
-        addFeature(
-                "🎤", "Speaking practice",
-                "Practise saying words aloud",
-                "Speak"
-        );
+        addFeature("🌍", "Translate & connect",
+            "Explore useful conversation phrases", "Translate");
 
-        addFeature(
-                "🌍", "Translate & connect",
-                "Explore useful conversation phrases",
-                "Translate"
-        );
-
-        addFeature(
-                "🏆", "Daily challenges",
-                "Build your skills and earn XP",
-                "Challenges"
-        );
+        addFeature("🏆", "Daily challenges",
+            "Build your skills and earn XP", "Challenges");
     }
 
     // --------------------------------
-    // LEARN / COURSE LIST
+    // LEARN
     // --------------------------------
 
     private void showLearn() {
+        addText("YOUR LEARNING COURSE", 22, WHITE, true);
+
+        addText(selectedLanguage + " • Beginner level",
+            14, TEAL, true);
 
         addText(
-                "YOUR LEARNING COURSE",
-                22, WHITE, true
-        );
-
-        addText(
-                selectedLanguage + " • Beginner level",
-                14, TEAL, true
-        );
-
-        addText(
-                getLanguageNote(),
-                13, MUTED, false
+            "Starter vocabulary for " + selectedLanguage + ".",
+            13, MUTED, false
         );
 
         addSpace(15);
 
         LinearLayout summary = card();
 
-        addTextTo(summary,
-                "COURSE PROGRESS", 11, TEAL, true);
+        addTextTo(summary, "COURSE PROGRESS",
+            11, TEAL, true);
 
         addTextTo(summary,
-                getCompletedInCurrentCourse()
-                        + " of 3 lessons completed",
-                19, WHITE, true);
+            getCompletedInCurrentCourse()
+                + " of 3 lessons completed",
+            19, WHITE, true);
 
         addTextTo(summary,
-                "Complete lessons and earn 10 XP each.",
-                12, MUTED, false);
+            "Complete lessons and earn 10 XP each.",
+            12, MUTED, false);
 
         content.addView(summary);
 
         addSpace(12);
-
         addText("LESSON PATH", 16, WHITE, true);
 
         for (int i = 0; i < lessonTitles.length; i++) {
-
             final int index = i;
 
             LinearLayout item = card();
 
             String status = isLessonComplete(i)
-                    ? "✓ COMPLETED"
-                    : "LESSON " + (i + 1);
+                ? "✓ COMPLETED"
+                : "LESSON " + (i + 1);
 
-            addTextTo(item,
-                    status, 10,
-                    isLessonComplete(i) ? TEAL : YELLOW,
-                    true);
+            addTextTo(item, status, 10,
+                isLessonComplete(i) ? TEAL : YELLOW, true);
 
-            addTextTo(item,
-                    lessonTitles[i], 19, WHITE, true);
+            addTextTo(item, lessonTitles[i],
+                19, WHITE, true);
 
-            addTextTo(item,
-                    lessonDescriptions[i], 13, MUTED, false);
+            addTextTo(item, lessonDescriptions[i],
+                13, MUTED, false);
 
             Button open = makeButton(
-                    isLessonComplete(i)
-                            ? "REVIEW LESSON"
-                            : "START LESSON"
+                isLessonComplete(i)
+                    ? "REVIEW LESSON"
+                    : "START LESSON"
             );
 
             item.addView(open);
@@ -534,68 +590,54 @@ public class MainActivity extends Activity {
             content.addView(item);
         }
 
-        addSpace(12);
-
         Button change = makeButton("CHANGE LANGUAGE");
         content.addView(change);
 
-        change.setOnClickListener(v ->
-                showScreen("Languages"));
-    }
-
-    private int getCompletedInCurrentCourse() {
-
-        int count = 0;
-
-        for (int i = 0; i < 3; i++) {
-            if (isLessonComplete(i)) {
-                count++;
-            }
-        }
-
-        return count;
+        change.setOnClickListener(
+            v -> showScreen("Languages")
+        );
     }
 
     // --------------------------------
-    // LANGUAGE SELECTION
+    // 50-LANGUAGE SELECTOR
     // --------------------------------
 
     private void showLanguages() {
+        addText("50 WORLD LANGUAGES", 23, WHITE, true);
 
         addText(
-                "CHOOSE YOUR LANGUAGE",
-                22, WHITE, true
+            "Choose a language to begin learning.",
+            14, MUTED, false
         );
 
         addText(
-                "Choose the language you want to practise.",
-                14, MUTED, false
+            "More languages and complete courses will be added gradually.",
+            12, TEAL, false
         );
 
         addSpace(12);
 
         for (String language : languageNames) {
-
             LinearLayout item = card();
 
-            addTextTo(item,
-                    language, 18, WHITE, true);
+            addTextTo(item, language, 18, WHITE, true);
 
             addTextTo(item,
-                    language.equals(selectedLanguage)
-                            ? "CURRENT LANGUAGE"
-                            : "SELECT THIS LANGUAGE",
-                    10, TEAL, true);
+                language.equals(selectedLanguage)
+                    ? "✓ CURRENT LANGUAGE"
+                    : "TAP TO SELECT",
+                10, TEAL, true
+            );
 
             item.setOnClickListener(v -> {
-
                 selectedLanguage = language;
                 saveProgress();
+                setSpeechLanguage();
 
                 Toast.makeText(
-                        this,
-                        language + " selected",
-                        Toast.LENGTH_SHORT
+                    this,
+                    language + " selected",
+                    Toast.LENGTH_SHORT
                 ).show();
 
                 showScreen("Learn");
@@ -610,71 +652,55 @@ public class MainActivity extends Activity {
     // --------------------------------
 
     private void showLesson() {
-
         String phrase = getTranslation(selectedLesson);
 
-        addText(
-                "LESSON " + (selectedLesson + 1)
-                        + " OF 3",
-                11, TEAL, true
-        );
+        addText("LESSON " + (selectedLesson + 1) + " OF 3",
+            11, TEAL, true);
 
-        addText(
-                lessonTitles[selectedLesson],
-                25, WHITE, true
-        );
+        addText(lessonTitles[selectedLesson],
+            25, WHITE, true);
 
-        addText(
-                selectedLanguage + " • Beginner",
-                14, MUTED, false
-        );
+        addText(selectedLanguage + " • Beginner",
+            14, MUTED, false);
 
         addSpace(15);
 
         LinearLayout panel = card();
 
-        addTextTo(panel,
-                "ENGLISH PHRASE", 11, TEAL, true);
+        addTextTo(panel, "ENGLISH PHRASE",
+            11, TEAL, true);
+
+        addTextTo(panel, englishPhrases[selectedLesson],
+            24, WHITE, true);
+
+        addTextTo(panel, "YOUR " + selectedLanguage + " PHRASE",
+            11, TEAL, true);
+
+        addTextTo(panel, phrase, 30, WHITE, true);
 
         addTextTo(panel,
-                englishPhrases[selectedLesson],
-                24, WHITE, true);
-
-        addTextTo(panel,
-                "YOUR " + selectedLanguage + " PHRASE",
-                11, TEAL, true);
-
-        addTextTo(panel,
-                phrase, 30, WHITE, true);
-
-        addTextTo(panel,
-                "Listen carefully and practise saying the phrase.",
-                13, MUTED, false);
+            "Listen carefully and practise saying the phrase.",
+            13, MUTED, false);
 
         Button listen = makeButton("🔊 LISTEN");
         panel.addView(listen);
 
         listen.setOnClickListener(v -> speak(phrase));
-
         content.addView(panel);
 
         addSpace(12);
-
         addText("LEARNING TIP", 15, TEAL, true);
 
         addText(
-                lessonDescriptions[selectedLesson]
-                        + " Repeat the phrase several times.",
-                13, MUTED, false
+            lessonDescriptions[selectedLesson]
+                + " Repeat the phrase several times.",
+            13, MUTED, false
         );
-
-        addSpace(10);
 
         Button practise = makeButton("🎤 PRACTISE SPEAKING");
         content.addView(practise);
 
-        practise.setOnClickListener(v ->
-                startSpeaking());
+        practise.setOnClickListener(v -> startSpeaking());
 
         Button quiz = makeButton("TAKE LESSON QUIZ");
         content.addView(quiz);
@@ -687,69 +713,48 @@ public class MainActivity extends Activity {
         Button back = makeButton("BACK TO LESSON PATH");
         content.addView(back);
 
-        back.setOnClickListener(v ->
-                showScreen("Learn"));
+        back.setOnClickListener(v -> showScreen("Learn"));
     }
 
     // --------------------------------
-    // LESSON QUIZ
+    // QUIZ
     // --------------------------------
 
     private void showQuiz() {
-
         String correctAnswer = getTranslation(selectedLesson);
 
-        addText(
-                "QUICK KNOWLEDGE CHECK",
-                12, TEAL, true
-        );
+        addText("QUICK KNOWLEDGE CHECK", 12, TEAL, true);
 
         addText(
-                "What is the " + selectedLanguage
-                        + " phrase for:",
-                16, MUTED, false
+            "What is the " + selectedLanguage + " phrase for:",
+            16, MUTED, false
         );
 
-        addText(
-                englishPhrases[selectedLesson],
-                26, WHITE, true
-        );
+        addText(englishPhrases[selectedLesson],
+            26, WHITE, true);
 
         addSpace(15);
 
-        addText(
-                "CHOOSE THE CORRECT ANSWER",
-                11, TEAL, true
-        );
+        addText("CHOOSE THE CORRECT ANSWER",
+            11, TEAL, true);
 
         for (int i = 0; i < 3; i++) {
-
-            final int answerIndex = i;
-
             String option = getTranslation(i);
-
             Button answer = makeButton(option);
 
             content.addView(answer);
 
             answer.setOnClickListener(v -> {
-
-                if (quizAnswered) {
-                    return;
-                }
+                if (quizAnswered) return;
 
                 if (option.equals(correctAnswer)) {
-
                     quizAnswered = true;
-
                     completeLesson(selectedLesson);
-
                 } else {
-
                     Toast.makeText(
-                            this,
-                            "Not quite. Try another answer.",
-                            Toast.LENGTH_SHORT
+                        this,
+                        "Not quite. Try another answer.",
+                        Toast.LENGTH_SHORT
                     ).show();
                 }
             });
@@ -758,77 +763,66 @@ public class MainActivity extends Activity {
         addSpace(12);
 
         addText(
-                "A correct answer completes this lesson "
-                        + "and awards 10 XP.",
-                12, MUTED, false
+            "A correct answer completes this lesson and awards 10 XP.",
+            12, MUTED, false
         );
 
         Button back = makeButton("BACK TO LESSON");
         content.addView(back);
 
-        back.setOnClickListener(v ->
-                showScreen("Lesson"));
+        back.setOnClickListener(v -> showScreen("Lesson"));
     }
 
     // --------------------------------
-    // SPEAKING PRACTICE
+    // SPEAKING
     // --------------------------------
 
     private void showSpeak() {
+        addText("SPEAKING PRACTICE", 23, WHITE, true);
 
         addText(
-                "SPEAKING PRACTICE",
-                23, WHITE, true
-        );
-
-        addText(
-                "Build confidence one conversation at a time.",
-                14, MUTED, false
+            "Build confidence one conversation at a time.",
+            14, MUTED, false
         );
 
         addSpace(15);
 
         LinearLayout panel = card();
 
-        addTextTo(panel,
-                "TODAY'S PHRASE", 11, TEAL, true);
+        addTextTo(panel, "TODAY'S PHRASE",
+            11, TEAL, true);
 
-        addTextTo(panel,
-                getTranslation(0), 27, WHITE, true);
+        addTextTo(panel, getTranslation(0),
+            27, WHITE, true);
 
-        addTextTo(panel,
-                "English: Hello",
-                14, MUTED, false);
+        addTextTo(panel, "English: Hello",
+            14, MUTED, false);
 
         Button listen = makeButton("🔊 HEAR EXAMPLE");
         panel.addView(listen);
 
-        listen.setOnClickListener(v ->
-                speak(getTranslation(0)));
+        listen.setOnClickListener(v -> speak(getTranslation(0)));
 
         Button record = makeButton("🎤 START SPEAKING");
         panel.addView(record);
 
-        record.setOnClickListener(v ->
-                startSpeaking());
+        record.setOnClickListener(v -> startSpeaking());
 
         content.addView(panel);
 
         addSpace(15);
-
         addText("YOUR RESULT", 14, TEAL, true);
 
         addText(
-                recognizedText.isEmpty()
-                        ? "Your recognised words will appear here."
-                        : recognizedText,
-                16, WHITE, false
+            recognizedText.isEmpty()
+                ? "Your recognised words will appear here."
+                : recognizedText,
+            16, WHITE, false
         );
 
         addText(
-                "Speech recognition depends on a compatible "
-                        + "speech service installed on your device.",
-                12, MUTED, false
+            "Speech recognition depends on a compatible speech service installed on your device.",
+            12, MUTED, false
         );
     }
 
@@ -837,58 +831,51 @@ public class MainActivity extends Activity {
     // --------------------------------
 
     private void showTranslate() {
+        addText("CONVERSATION BRIDGE", 22, WHITE, true);
 
         addText(
-                "CONVERSATION BRIDGE",
-                22, WHITE, true
-        );
-
-        addText(
-                "Explore useful phrases between languages.",
-                14, MUTED, false
+            "Explore useful phrases between languages.",
+            14, MUTED, false
         );
 
         addSpace(12);
 
         for (int i = 0; i < 3; i++) {
-
             final int index = i;
-
             LinearLayout panel = card();
 
-            addTextTo(panel,
-                    "ENGLISH", 10, TEAL, true);
+            addTextTo(panel, "ENGLISH", 10, TEAL, true);
+            addTextTo(panel, englishPhrases[i], 20, WHITE, true);
 
             addTextTo(panel,
-                    englishPhrases[i], 20, WHITE, true);
+                selectedLanguage.toUpperCase(Locale.ROOT),
+                10, TEAL, true
+            );
 
-            addTextTo(panel,
-                    selectedLanguage.toUpperCase(Locale.ROOT),
-                    10, TEAL, true);
-
-            addTextTo(panel,
-                    getTranslation(i), 23, WHITE, true);
+            addTextTo(panel, getTranslation(i),
+                23, WHITE, true);
 
             Button listen = makeButton("🔊 LISTEN");
             panel.addView(listen);
 
-            listen.setOnClickListener(v ->
-                    speak(getTranslation(index)));
+            listen.setOnClickListener(
+                v -> speak(getTranslation(index))
+            );
 
             content.addView(panel);
         }
 
         addText(
-                "This is an introductory phrasebook. "
-                        + "Live automatic translation is not enabled yet.",
-                12, MUTED, false
+            "This is an introductory phrasebook. Live automatic translation is not enabled yet.",
+            12, MUTED, false
         );
 
         Button change = makeButton("CHANGE LANGUAGE");
         content.addView(change);
 
-        change.setOnClickListener(v ->
-                showScreen("Languages"));
+        change.setOnClickListener(
+            v -> showScreen("Languages")
+        );
     }
 
     // --------------------------------
@@ -896,70 +883,55 @@ public class MainActivity extends Activity {
     // --------------------------------
 
     private void showChallenges() {
+        addText("DAILY CHALLENGES", 23, WHITE, true);
 
-        addText(
-                "DAILY CHALLENGES",
-                23, WHITE, true
-        );
-
-        addText(
-                "Small steps. Big progress.",
-                14, MUTED, false
-        );
+        addText("Small steps. Big progress.",
+            14, MUTED, false);
 
         addSpace(12);
 
-        addChallenge(
-                "📖", "Review a lesson",
-                "Return to your lesson path", 10
-        );
+        addChallenge("📖", "Review a lesson",
+            "Return to your lesson path", 10);
 
-        addChallenge(
-                "🎤", "Speak one phrase",
-                "Practise using your voice", 5
-        );
+        addChallenge("🎤", "Speak one phrase",
+            "Practise using your voice", 5);
 
-        addChallenge(
-                "🌍", "Explore your phrasebook",
-                "Discover useful expressions", 5
-        );
+        addChallenge("🌍", "Explore your phrasebook",
+            "Discover useful expressions", 5);
 
         addSpace(12);
 
-        addText(
-                "Your current XP: " + xp,
-                20, TEAL, true
-        );
+        addText("Your current XP: " + xp,
+            20, TEAL, true);
     }
 
     private void addChallenge(
-            String emoji,
-            String title,
-            String description,
-            int points) {
-
+        String emoji,
+        String title,
+        String description,
+        int points
+    ) {
         LinearLayout item = card();
 
-        addTextTo(item,
-                emoji + "  " + title, 17, WHITE, true);
+        addTextTo(item, emoji + "  " + title,
+            17, WHITE, true);
 
-        addTextTo(item,
-                description, 12, MUTED, false);
+        addTextTo(item, description,
+            12, MUTED, false);
 
         Button done = makeButton(
-                "CLAIM  +" + points + " XP"
+            "CLAIM  +" + points + " XP"
         );
 
         item.addView(done);
 
         done.setOnClickListener(v -> {
-
             addXP(points);
 
             Toast.makeText(
-                    this,
-                    "+" + points + " XP earned!",
-                    Toast.LENGTH_SHORT
+                this,
+                "+" + points + " XP earned!",
+                Toast.LENGTH_SHORT
             ).show();
 
             showScreen("Challenges");
@@ -973,61 +945,48 @@ public class MainActivity extends Activity {
     // --------------------------------
 
     private void showProfile() {
+        addText("YOUR PROFILE", 23, WHITE, true);
 
-        addText(
-                "YOUR PROFILE",
-                23, WHITE, true
-        );
-
-        addText(
-                "Your learning journey.",
-                14, MUTED, false
-        );
+        addText("Your learning journey.",
+            14, MUTED, false);
 
         addSpace(12);
 
         LinearLayout panel = card();
 
-        addTextTo(panel,
-                "🌍 SpeakBridge Learner",
-                20, WHITE, true);
+        addTextTo(panel, "🌍 SpeakBridge Learner",
+            20, WHITE, true);
+
+        addTextTo(panel, "Learning: " + selectedLanguage,
+            14, MUTED, false);
+
+        addTextTo(panel, "Experience: " + xp + " XP",
+            14, TEAL, true);
+
+        addTextTo(panel, "🔥 Learning streak: " + streak + " day",
+            14, MUTED, false);
 
         addTextTo(panel,
-                "Learning: " + selectedLanguage,
-                14, MUTED, false);
-
-        addTextTo(panel,
-                "Experience: " + xp + " XP",
-                14, TEAL, true);
-
-        addTextTo(panel,
-                "🔥 Learning streak: " + streak + " day",
-                14, MUTED, false);
-
-        addTextTo(panel,
-                "Completed lessons: " + completedLessons,
-                14, MUTED, false);
+            "Completed lessons: " + completedLessons,
+            14, MUTED, false
+        );
 
         content.addView(panel);
-
-        addSpace(12);
 
         Button change = makeButton("CHANGE LANGUAGE");
         content.addView(change);
 
-        change.setOnClickListener(v ->
-                showScreen("Languages"));
+        change.setOnClickListener(
+            v -> showScreen("Languages")
+        );
 
         Button home = makeButton("BACK TO HOME");
         content.addView(home);
 
-        home.setOnClickListener(v ->
-                showScreen("Home"));
+        home.setOnClickListener(v -> showScreen("Home"));
 
-        addText(
-                "Your progress is saved on this device.",
-                12, MUTED, false
-        );
+        addText("Your progress is saved on this device.",
+            12, MUTED, false);
     }
 
     // --------------------------------
@@ -1035,142 +994,114 @@ public class MainActivity extends Activity {
     // --------------------------------
 
     private void addFeature(
-            String emoji,
-            String title,
-            String description,
-            String destination) {
-
+        String emoji,
+        String title,
+        String description,
+        String destination
+    ) {
         LinearLayout item = card();
 
-        addTextTo(item,
-                emoji + "  " + title, 17, WHITE, true);
+        addTextTo(item, emoji + "  " + title,
+            17, WHITE, true);
 
-        addTextTo(item,
-                description, 12, MUTED, false);
+        addTextTo(item, description,
+            12, MUTED, false);
 
-        item.setOnClickListener(v ->
-                showScreen(destination));
+        item.setOnClickListener(
+            v -> showScreen(destination)
+        );
 
         content.addView(item);
     }
 
     private void addNavigation() {
-
         LinearLayout nav = new LinearLayout(this);
 
         nav.setOrientation(LinearLayout.HORIZONTAL);
         nav.setGravity(Gravity.CENTER);
-
-        nav.setPadding(
-                dp(4), dp(8), dp(4), dp(8)
-        );
-
-        nav.setBackgroundColor(
-                Color.rgb(12, 23, 35)
-        );
+        nav.setPadding(dp(4), dp(8), dp(4), dp(8));
+        nav.setBackgroundColor(Color.rgb(12, 23, 35));
 
         String[] tabs = {
-                "Home", "Learn", "Speak",
-                "Challenges", "Profile"
+            "Home", "Learn", "Speak", "Challenges", "Profile"
         };
 
         for (String tab : tabs) {
-
             TextView button = makeText(
-                    tab,
-                    10,
-                    currentScreen.equals(tab) ? TEAL : MUTED,
-                    true
+                tab, 10,
+                currentScreen.equals(tab) ? TEAL : MUTED,
+                true
             );
 
             button.setGravity(Gravity.CENTER);
-
-            button.setPadding(
-                    dp(2), dp(12), dp(2), dp(12)
-            );
+            button.setPadding(dp(2), dp(12), dp(2), dp(12));
 
             nav.addView(button,
-                    new LinearLayout.LayoutParams(
-                            0, -2, 1
-                    ));
+                new LinearLayout.LayoutParams(0, -2, 1)
+            );
 
-            button.setOnClickListener(v ->
-                    showScreen(tab));
+            button.setOnClickListener(v -> showScreen(tab));
         }
 
         root.addView(nav);
     }
 
     private LinearLayout card() {
-
         LinearLayout panel = new LinearLayout(this);
-
         panel.setOrientation(LinearLayout.VERTICAL);
-
-        panel.setPadding(
-                dp(16), dp(16), dp(16), dp(16)
-        );
+        panel.setPadding(dp(16), dp(16), dp(16), dp(16));
 
         GradientDrawable shape = new GradientDrawable();
-
         shape.setColor(PANEL);
         shape.setCornerRadius(dp(18));
-
         panel.setBackground(shape);
 
         LinearLayout.LayoutParams params =
-                new LinearLayout.LayoutParams(-1, -2);
+            new LinearLayout.LayoutParams(-1, -2);
 
         params.bottomMargin = dp(12);
-
         panel.setLayoutParams(params);
 
         return panel;
     }
 
     private void addTextTo(
-            LinearLayout parent,
-            String value,
-            int size,
-            int color,
-            boolean bold) {
-
-        TextView view = makeText(
-                value, size, color, bold
-        );
+        LinearLayout parent,
+        String value,
+        int size,
+        int color,
+        boolean bold
+    ) {
+        TextView view = makeText(value, size, color, bold);
 
         LinearLayout.LayoutParams params =
-                new LinearLayout.LayoutParams(-1, -2);
+            new LinearLayout.LayoutParams(-1, -2);
 
         params.bottomMargin = dp(7);
-
         parent.addView(view, params);
     }
 
     private void addText(
-            String value,
-            int size,
-            int color,
-            boolean bold) {
-
-        TextView view = makeText(
-                value, size, color, bold
-        );
+        String value,
+        int size,
+        int color,
+        boolean bold
+    ) {
+        TextView view = makeText(value, size, color, bold);
 
         LinearLayout.LayoutParams params =
-                new LinearLayout.LayoutParams(-1, -2);
+            new LinearLayout.LayoutParams(-1, -2);
 
         params.bottomMargin = dp(8);
-
         content.addView(view, params);
     }
 
     private TextView makeText(
-            String value,
-            int size,
-            int color,
-            boolean bold) {
-
+        String value,
+        int size,
+        int color,
+        boolean bold
+    ) {
         TextView view = new TextView(this);
 
         view.setText(value);
@@ -1178,17 +1109,13 @@ public class MainActivity extends Activity {
         view.setTextColor(color);
 
         if (bold) {
-            view.setTypeface(
-                    Typeface.DEFAULT,
-                    Typeface.BOLD
-            );
+            view.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         }
 
         return view;
     }
 
     private Button makeButton(String label) {
-
         Button button = new Button(this);
 
         button.setText(label);
@@ -1197,116 +1124,102 @@ public class MainActivity extends Activity {
         button.setAllCaps(false);
 
         GradientDrawable shape = new GradientDrawable();
-
         shape.setColor(TEAL);
         shape.setCornerRadius(dp(13));
 
         button.setBackground(shape);
 
         LinearLayout.LayoutParams params =
-                new LinearLayout.LayoutParams(-1, dp(48));
+            new LinearLayout.LayoutParams(-1, dp(48));
 
         params.topMargin = dp(7);
-
         button.setLayoutParams(params);
 
         return button;
     }
 
     private void addSpace(int height) {
-
         View space = new View(this);
 
         content.addView(space,
-                new LinearLayout.LayoutParams(
-                        1, dp(height)
-                ));
+            new LinearLayout.LayoutParams(1, dp(height))
+        );
     }
 
     // --------------------------------
-    // VOICE AND SPEECH
+    // VOICE
     // --------------------------------
 
     private void speak(String words) {
-
         if (speech != null) {
-
             speech.speak(
-                    words,
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "speakbridge_audio"
+                words,
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "speakbridge_audio"
             );
         }
     }
 
     private void startSpeaking() {
-
         try {
-
             Intent intent = new Intent(
-                    RecognizerIntent.ACTION_RECOGNIZE_SPEECH
+                RecognizerIntent.ACTION_RECOGNIZE_SPEECH
             );
 
             intent.putExtra(
-                    RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                    RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
             );
 
             intent.putExtra(
-                    RecognizerIntent.EXTRA_LANGUAGE,
-                    Locale.getDefault()
+                RecognizerIntent.EXTRA_LANGUAGE,
+                getLanguageTag()
             );
 
             intent.putExtra(
-                    RecognizerIntent.EXTRA_PROMPT,
-                    "Speak now"
+                RecognizerIntent.EXTRA_PROMPT,
+                "Speak in " + selectedLanguage
             );
 
-            startActivityForResult(
-                    intent, SPEECH_REQUEST
-            );
+            startActivityForResult(intent, SPEECH_REQUEST);
 
         } catch (Exception e) {
-
             Toast.makeText(
-                    this,
-                    "No compatible speech recognition service found.",
-                    Toast.LENGTH_LONG
+                this,
+                "No compatible speech recognition service found.",
+                Toast.LENGTH_LONG
             ).show();
         }
     }
 
     @Override
     protected void onActivityResult(
-            int requestCode,
-            int resultCode,
-            Intent data) {
-
-        super.onActivityResult(
-                requestCode, resultCode, data
-        );
+        int requestCode,
+        int resultCode,
+        Intent data
+    ) {
+        super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == SPEECH_REQUEST
                 && resultCode == RESULT_OK
                 && data != null) {
 
             ArrayList<String> results =
-                    data.getStringArrayListExtra(
-                            RecognizerIntent.EXTRA_RESULTS
-                    );
+                data.getStringArrayListExtra(
+                    RecognizerIntent.EXTRA_RESULTS
+                );
 
             if (results != null && !results.isEmpty()) {
-
                 recognizedText = results.get(0);
 
                 addXP(5);
                 saveProgress();
 
                 Toast.makeText(
-                        this,
-                        "Speaking practice completed! +5 XP",
-                        Toast.LENGTH_SHORT
+                    this,
+                    "Speaking practice completed! +5 XP",
+                    Toast.LENGTH_SHORT
                 ).show();
 
                 showScreen("Speak");
@@ -1319,17 +1232,15 @@ public class MainActivity extends Activity {
     // --------------------------------
 
     private int dp(int value) {
-
         return (int) (
-                value *
-                getResources().getDisplayMetrics().density
-                + 0.5f
+            value *
+            getResources().getDisplayMetrics().density
+            + 0.5f
         );
     }
 
     @Override
     protected void onDestroy() {
-
         if (speech != null) {
             speech.stop();
             speech.shutdown();
